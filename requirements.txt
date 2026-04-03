@@ -1,0 +1,3 @@
+# Minimal CrisisFlow dependencies
+numpy
+pyyaml

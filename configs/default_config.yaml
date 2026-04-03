@@ -1,0 +1,10 @@
+env_params:
+  map_size: 10
+  crisis_type: "flood"
+  max_steps: 100
+
+agent_params:
+  learning_rate: 0.001
+  gamma: 0.99
+  epsilon: 0.1
+  batch_size: 32
