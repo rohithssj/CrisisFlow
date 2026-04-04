@@ -34,7 +34,7 @@ class BaselineAgent(BaseAgent):
             row = []
             for pat in active_pats:
                 # 3. TRAVEL OPTIMIZATION: Predict survival outcomes based on traffic and distance
-                score = self._pair_score(amb, pat, hospitals, state)
+                score = self._pair_score(amb, pat, hospitals, state_dict)
                 row.append(score)
             score_matrix.append(row)
 

@@ -1,0 +1,5 @@
+name: hard
+num_patients: 20
+num_ambulances: 4
+hospital_capacity: 10
+seed: 42

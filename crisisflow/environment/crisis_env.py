@@ -104,14 +104,29 @@ class CrisisEnv:
     Multiple actions can dispatch multiple ambulances per step.
     """
 
-    def __init__(self, difficulty: str = "medium", seed: Optional[int] = None):
-        assert difficulty in ("easy", "medium", "hard"), \
-            f"difficulty must be 'easy', 'medium', or 'hard', got '{difficulty}'"
-        self.difficulty = difficulty
-        self.config = DIFFICULTY_CONFIGS[difficulty]
+    def __init__(self, difficulty: str = "medium", seed: Optional[int] = None, **kwargs):
+        # Fallback to the task "name" if "difficulty" wasn't explicitly passed but name was
+        difficulty_name = kwargs.get("name", difficulty)
         
+        assert difficulty_name in ("easy", "medium", "hard"), \
+            f"difficulty must be 'easy', 'medium', or 'hard', got '{difficulty_name}'"
+            
+        self.difficulty = difficulty_name
+        
+        # Base config on difficulty
+        self.config = DIFFICULTY_CONFIGS[self.difficulty].copy()
+        
+        # Override with any task-specific parameters
+        if "num_patients" in kwargs:
+            self.config["num_crises"] = kwargs["num_patients"]
+        if "num_ambulances" in kwargs:
+            self.config["num_ambulances"] = kwargs["num_ambulances"]
+        if "hospital_capacity" in kwargs:
+            self.config["hospital_capacity"] = kwargs["hospital_capacity"]
+            
         # 2a. RANDOM SCENARIOS: Dynamic seed if none provided
-        self.seed = seed if seed is not None else random.randint(0, 99999)
+        task_seed = kwargs.get("seed", seed)
+        self.seed = task_seed if task_seed is not None else random.randint(0, 99999)
         self._rng = random.Random(self.seed)
 
         # Will be populated on reset()
@@ -137,6 +152,10 @@ class CrisisEnv:
 
     def reset(self) -> Observation:
         """Reset to a fresh episode. Returns the initial observation."""
+        import numpy as np
+        random.seed(self.seed)
+        np.random.seed(self.seed)
+        
         cfg = self.config
         self._rng = random.Random(self.seed)
         self.step_count = 0
@@ -490,8 +509,8 @@ class CrisisEnv:
             score = 1.0
             survival_rate = 0.0
         else:
-            # 1. BETTER METRICS: Calculate survival rate
-            survival_rate = round((rescued / total) * 100, 1)
+            # 1. FIX: Calculate survival rate normalized to 0.0 - 1.0
+            survival_rate = round(rescued / total, 4)
             
             # Score = weighted rescue rate
             rescue_value = 0.0
@@ -518,10 +537,10 @@ class CrisisEnv:
         return {
             "score": round(min(1.0, max(0.0, score)), 4),
             "survival_rate": survival_rate,
-            "critical_rescued": self._critical_rescued,
+            "critical_saved": self._critical_rescued,
             "overflow_rescues": self._overflow_rescues,
             "rescued": rescued,
-            "dead": self._dead_count,
+            "deaths": self._dead_count,
             "total_patients": total,
             "avg_response_time": round(avg_response, 2),
             "steps_taken": self.step_count,

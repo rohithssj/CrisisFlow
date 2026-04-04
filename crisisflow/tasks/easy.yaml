@@ -1,0 +1,5 @@
+name: easy
+num_patients: 5
+num_ambulances: 6
+hospital_capacity: 20
+seed: 42

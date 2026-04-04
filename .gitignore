@@ -2,6 +2,9 @@
 __pycache__/
 *.py[cod]
 *$py.class
+test_*.py
+__pycache__/
+*.log
 
 # Environments
 .env
