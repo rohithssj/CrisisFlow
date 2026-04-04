@@ -1,88 +1,256 @@
-# 🚑 CrisisFlow
+# 🚑 CrisisFlow — AI-Powered Disaster Response Simulation
 
-**CrisisFlow** is an advanced, modular simulation environment designed for developing and evaluating autonomous reinforcement learning (RL) agents for urban emergency response.
+CrisisFlow is a **real-time crisis response simulation system** that models how emergency resources (ambulances, hospitals) are allocated under high-pressure scenarios using intelligent decision-making.
 
-### 🌟 Project Overview
-In a city grid, crises occur at random locations with varying severity levels. **CrisisFlow** simulates the complex task of dispatching emergency resources (ambulances) to patients while optimizing for survival rates, response times, and hospital load balancing.
-
-### 🧩 Problem Statement
-Traditional emergency response systems often struggle with peak demand and hospital bottlenecks. **CrisisFlow** provides a sandbox to train AI agents that can:
-- **Prioritize** critical patients over minor incidents.
-- **Strategically Dispatch** ambulances based on Euclidean travel time.
-- **Balance Loads** between multiple hospitals to prevent system saturation.
+It is designed to demonstrate how **AI-driven coordination systems** can significantly improve survival outcomes during disasters.
 
 ---
 
-### 🕹️ How It Works
+# 🌍 Problem Statement
 
-#### **1. Environment Mechanics**
-- **Patients**: Spawn with 3 severity levels (1=Minor, 3=Critical). Wait time increases until a death threshold is reached if not rescued.
-- **Ambulances**: Fixed locations initially. Become "busy" during travel and rescue phases.
-- **Hospitals**: Fixed locations with finite capacity. Patients are admitted and discharged over time.
+In real-world disasters (earthquakes, floods, urban accidents):
 
-#### **2. API & Format**
-- **Action Space**: `{"ambulance_id": int, "patient_id": int}` - Dispatch a specific ambulance to a specific patient.
-- **State Space**: A detailed dictionary nested with list of patients, ambulances, and global stats.
-- **Reward Function**: Proximal rewards for successful rescues, scaled by severity and speed, with penalties for idle resources and patient fatalities.
+* Emergency resources are **limited**
+* Decisions must be made **in seconds**
+* Poor coordination leads to:
+
+  * Increased fatalities
+  * Delayed response times
+  * Underutilized hospitals
+
+👉 The challenge is:
+
+> How can we intelligently allocate emergency resources in real-time to maximize survival?
 
 ---
 
-### 🚀 Getting Started
+# 💡 Our Approach
 
-#### **Local Execution**
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/your-repo/CrisisFlow.git
-   cd CrisisFlow
-   ```
-2. **Setup virtual environment**:
-   ```bash
-   python -m venv .venv
-   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-   ```
-3. **Install dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   ```
-4. **Run Simulation**:
-   ```bash
-   python inference.py
-   ```
+CrisisFlow simulates a **dynamic disaster environment** and uses an intelligent agent to:
 
-#### **Run with Docker**
-Simply build and run the provided container:
-```bash
-docker build -t crisisflow .
-docker run crisisflow
+* Evaluate multiple patients simultaneously
+* Prioritize based on:
+
+  * Severity
+  * Distance
+  * Waiting time
+* Assign ambulances efficiently
+* Route patients to optimal hospitals
+
+---
+
+# 🧠 System Architecture
+
+```
+Environment (Gym-style)
+        ↓
+State Representation
+        ↓
+Decision Agent (Rule-based → RL-ready)
+        ↓
+Multi-Dispatch System
+        ↓
+Simulation Loop
+        ↓
+Metrics + Visualization
 ```
 
 ---
 
-### 📊 Example Output
-```text
-Step   | Action                    | Reward   | Active   | Rescued  | Dead    
---------------------------------------------------------------------------------
-1      | Amb 0 -> Pat 0            | 0.0500   | 11       | 0        | 0       
-2      | Amb 1 -> Pat 1            | 0.0500   | 11       | 0        | 0       
-...
-150    | Amb 2 -> Pat 34           | 0.1242   | 0        | 32       | 3       
+# ⚙️ Core Features
 
---- SIMULATION COMPLETE ---
-Final Score:       0.8422
-Total Rescued:     32
-Total Dead:        3
-Total Steps:       150
+## 🚨 1. Multi-Dispatch Decision System
+
+* Assigns multiple ambulances per timestep
+* Optimizes resource usage across the system
+
+---
+
+## 🎯 2. Intelligent Priority Scoring
+
+Each patient is ranked using:
+
+* Severity (critical > medium > stable)
+* Distance from ambulance
+* Waiting time
+
+👉 Ensures **high-risk patients are prioritized first**
+
+---
+
+## 🌐 3. Dynamic Simulation Environment
+
+* Randomized scenarios every run
+* Traffic-like complexity
+* Real-time state updates
+
+---
+
+## 🗺️ 4. Tactical Map Visualization (Advanced UI)
+
+A **live command center dashboard** built with PyDeck:
+
+* 🚑 Ambulances (icon-based, animated)
+* 🏥 Hospitals (capacity-aware visualization)
+* 🧑 Patients (color-coded by severity)
+* ❌ Fatalities tracking
+* 🔗 Route visualization (ambulance → patient → hospital)
+
+---
+
+## 🎬 5. Real-Time Animation Engine
+
+* Smooth movement (no teleportation)
+* Continuous updates without full page refresh
+* Live system behavior visualization
+
+---
+
+## 🧠 6. Operational Intelligence Feed
+
+A live decision log showing:
+
+* Ambulance assignments
+* Patient prioritization
+* Real-time actions taken by the agent
+
+👉 Makes AI decisions **transparent and interpretable**
+
+---
+
+## 📊 7. Performance Metrics Dashboard
+
+### 🔥 Mission Efficiency Score
+
+Overall system performance (0 → 1)
+
+### 📦 Key Metrics
+
+* Survival Rate
+* Fatalities
+* Critical Patients Saved
+* Average Response Time
+
+All metrics are displayed in **premium card-based UI**
+
+---
+
+## 📈 8. Reward Performance Tracking
+
+* Tracks reward progression over time
+* Helps evaluate agent performance
+
+---
+
+## ⚡ 9. High-Performance UI Architecture
+
+* No full-page refreshes
+* Component-level updates using placeholders
+* Smooth real-time experience
+
+---
+
+# 🧪 Simulation Workflow
+
+1. Initialize environment
+2. Generate random crisis scenario
+3. Agent observes system state
+4. Assigns ambulances
+5. Simulation updates:
+
+   * Movement
+   * Pickups
+   * Deliveries
+6. Metrics updated
+7. Repeat until completion
+
+---
+
+# 🏗️ Tech Stack
+
+* **Python**
+* **Streamlit** (UI Dashboard)
+* **PyDeck (Deck.gl)** — Map visualization
+* **NumPy / Pandas** — Data handling
+
+---
+
+# 🔄 OpenEnv Compliance
+
+CrisisFlow follows a structured environment design:
+
+* `reset()` → Initialize scenario
+* `step(action)` → Execute decisions
+* `state` → Current system snapshot
+
+---
+
+# 📁 Project Structure
+
+```
+crisisflow/
+│
+├── agents/
+│   └── baseline_agent.py
+│
+├── environment/
+│   └── crisis_env.py
+│
+├── ui/
+│   └── map.py
+│
+├── app.py
+├── inference.py
+├── Dockerfile
+└── requirements.txt
 ```
 
 ---
 
-### 🛠️ Tech Stack
-- **Core Engine**: Python 3.10
-- **Math & Logic**: NumPy, Gymnasium
-- **Config Management**: PyYAML
-- **Deployment**: Docker (Linux-slim)
+# 🚀 Key Innovations
+
+✅ Multi-dispatch coordination system
+✅ Real-time tactical visualization
+✅ Smooth animation engine (no refresh UX)
+✅ Explainable AI decisions
+✅ Production-grade dashboard UI
 
 ---
 
-### 📄 License
-This project is licensed under the MIT License - see the LICENSE file for details.
+# 📦 Deployment Ready
+
+* Docker-compatible
+* Hugging Face Spaces ready
+* Lightweight and efficient
+
+---
+
+# 🔮 Future Scope
+
+* Reinforcement Learning-based agent
+* Traffic-aware routing
+* Real-world map integration
+* Multi-city disaster scaling
+* Predictive demand modeling
+
+---
+
+# 🏁 Conclusion
+
+CrisisFlow demonstrates how **AI + simulation + real-time visualization** can transform disaster response systems.
+
+> From reactive decision-making → to intelligent, coordinated action.
+
+---
+
+# 👨‍💻 Built For
+
+* Meta / PyTorch Hackathon
+* OpenEnv-style AI simulation challenges
+
+---
+
+# ⭐ Final Note
+
+CrisisFlow is not just a simulation —
+it is a **vision of how intelligent systems can save lives at scale**.
