@@ -1,36 +1,3 @@
-name: CrisisFlow
-description: >
-  A modular reinforcement learning environment that simulates a city grid with medical emergencies. 
-  Autonomous agents dispatch resources (ambulances) to patients based on severity and road distance.
-entrypoint: inference.py
-supported_difficulties:
-  - easy
-  - medium
-  - hard
-api_format:
-  input:
-    # Format of an action
-    type: dictionary
-    schema:
-      ambulance_id: integer
-      patient_id: integer
-  output:
-    # Format of a state
-    type: dictionary
-    schema:
-      step: integer
-      difficulty: string
-      patients: list
-      ambulances: list
-      hospitals: list
-      stats:
-        active_patients: integer
-        rescued: integer
-        dead: integer
-  reward:
-    type: float
-    range: [-1.0, 1.0]
-
-metadata:
-  version: 0.1.0
-  licence: MIT
+name: crisisflow
+description: AI-powered disaster response simulation
+entry_point: crisisflow.environment.crisis_env:CrisisEnv

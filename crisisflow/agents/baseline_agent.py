@@ -14,9 +14,12 @@ class BaselineAgent(BaseAgent):
         """
         1. GLOBAL MATCHING: Finds the optimal assignment set that maximizes total survival probability.
         """
-        patients = state.get("patients", [])
-        ambulances = state.get("ambulances", [])
-        hospitals = state.get("hospitals", [])
+        # Support both new Observation model and old dict
+        state_dict = state.model_dump() if hasattr(state, "model_dump") else state
+        
+        patients = state_dict.get("patients", [])
+        ambulances = state_dict.get("ambulances", [])
+        hospitals = state_dict.get("hospitals", [])
         
         # Filter available resources
         active_pats = [p for p in patients if not p.get("rescued") and not p.get("dead")]

@@ -29,7 +29,9 @@ def run_simulation(difficulty="medium"):
         
         # Log progress
         step = info['steps_taken']
-        active = next_state['stats']['active_patients']
+        
+        # Calculate active patients from Observation
+        active = sum(1 for p in next_state.patients if not p.get('rescued') and not p.get('dead'))
         rescued = info['rescued']
         dead = info['dead']
         
@@ -39,7 +41,9 @@ def run_simulation(difficulty="medium"):
         else:
             action_str = "Wait (No Action)"
         
-        print(f"{step:<6} | {action_str:<25} | {reward:<8.3f} | {active:<8} | {rescued:<8} | {dead:<8}")
+        # Handle reward model or float
+        reward_val = reward.score if hasattr(reward, 'score') else reward
+        print(f"{step:<6} | {action_str:<25} | {reward_val:<8.3f} | {active:<8} | {rescued:<8} | {dead:<8}")
         
         state = next_state
 

@@ -293,7 +293,9 @@ if nav == "Tactical Map":
 
         # Initial Map Render
         if st.session_state.state and not st.session_state.running:
-            fig = draw_pydeck_map(st.session_state.state, prev_state=st.session_state.get('prev_state'), alpha=1.0)
+            state_dict = st.session_state.state.model_dump() if hasattr(st.session_state.state, "model_dump") else st.session_state.state
+            prev_state_dict = st.session_state.prev_state.model_dump() if hasattr(st.session_state.prev_state, "model_dump") else st.session_state.get('prev_state')
+            fig = draw_pydeck_map(state_dict, prev_state=prev_state_dict, alpha=1.0)
             map_placeholder.plotly_chart(fig, width="stretch", key="initial_load_tactical")
 
     # Simulation Inner Loop
@@ -307,13 +309,14 @@ if nav == "Tactical Map":
         
         while st.session_state.running and not st.session_state.paused:
             state = st.session_state.state
+            state_dict = state.model_dump() if hasattr(state, "model_dump") else state
             actions = agent.select_action(state)
             
             # Generate Decision Trace
             for action in actions:
                 p_id = action['patient_id']
                 a_id = action['ambulance_id']
-                p_data = next((p for p in state['patients'] if p['id'] == p_id), None)
+                p_data = next((p for p in state_dict['patients'] if p['id'] == p_id), None)
                 sev = p_data['severity'] if p_data else 1
                 sev_label = ["Minor", "Serious", "Critical"][sev-1]
                 log_time = time.strftime('%H:%M:%S')
@@ -326,7 +329,9 @@ if nav == "Tactical Map":
             # State Update (Memory)
             st.session_state.prev_state = state
             st.session_state.state = next_state
-            st.session_state.rewards.append(reward)
+            
+            reward_val = reward.score if hasattr(reward, 'score') else reward
+            st.session_state.rewards.append(reward_val)
             
             # ──────── COMPONENT UPDATE (ZERO-REFRESH) ────────
             
@@ -342,14 +347,16 @@ if nav == "Tactical Map":
             log_placeholder.markdown(f'<div class="log-container">{log_content}</div>', unsafe_allow_html=True)
             
             # 3. Tactical Environment
-            fig = draw_pydeck_map(next_state, prev_state=st.session_state.get('prev_state'), alpha=0.3)
+            next_state_dict = next_state.model_dump() if hasattr(next_state, "model_dump") else next_state
+            prev_state_dict = st.session_state.prev_state.model_dump() if hasattr(st.session_state.prev_state, "model_dump") else st.session_state.get('prev_state')
+            fig = draw_pydeck_map(next_state_dict, prev_state=prev_state_dict, alpha=0.3)
             # Make the figure mathematically unique each step to bypass DuplicateElementId in the while loop
-            fig.update_layout(title=f"<!-- step {next_state['step']} -->")
+            fig.update_layout(title=f"<!-- step {next_state_dict['time_step']} -->")
             map_placeholder.plotly_chart(fig, width="stretch")
             
             # 4. Infrastructure Tracking
             with hosp_placeholder.container():
-                for h in next_state['hospitals']:
+                for h in next_state_dict['hospitals']:
                     pct = h['current_load'] / h['capacity']
                     st.progress(pct, text=f"Station-{h['id']:02d}: {h['current_load']}/{h['capacity']}")
             
@@ -357,7 +364,7 @@ if nav == "Tactical Map":
             if st.session_state.rewards:
                 chart_placeholder.line_chart(st.session_state.rewards, color="#00d4ff")
                 
-            step_status.caption(f"SYSTEM STEP: {next_state['step']} / {max_steps} | CLOCK: {time.strftime('%H:%M:%S')}")
+            step_status.caption(f"SYSTEM STEP: {next_state_dict['time_step']} / {max_steps} | CLOCK: {time.strftime('%H:%M:%S')}")
 
             if done:
                 st.session_state.running = False

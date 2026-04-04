@@ -14,6 +14,7 @@ import math
 from dataclasses import dataclass, field, asdict
 from typing import Optional, List, Union
 from configs.default_config import DIFFICULTY_CONFIGS
+from crisisflow.environment.models import Observation, Action, Reward
 
 
 # ── Data classes ─────────────────────────────────────────────────────────────
@@ -134,8 +135,8 @@ class CrisisEnv:
 
     # ── OpenEnv API ──────────────────────────────────────────────────────────
 
-    def reset(self) -> dict:
-        """Reset to a fresh episode. Returns the initial state dict."""
+    def reset(self) -> Observation:
+        """Reset to a fresh episode. Returns the initial observation."""
         cfg = self.config
         self._rng = random.Random(self.seed)
         self.step_count = 0
@@ -185,19 +186,32 @@ class CrisisEnv:
 
         return self.state()
 
-    def step(self, actions: Union[List[dict], dict, None]) -> tuple[dict, float, bool, dict]:
-        """
-        Execute multiple actions and advance the world by one time step.
+    def state(self) -> Observation:
+        return self._get_observation()
 
-        actions: list of [{"ambulance_id": int, "patient_id": int}]
+    def _get_observation(self) -> Observation:
+        legacy = self._get_legacy_state()
+        return Observation(
+            patients=legacy["patients"],
+            ambulances=legacy["ambulances"],
+            hospitals=legacy["hospitals"],
+            time_step=legacy["step"]
+        )
+
+    def step(self, action: Union[Action, List[dict], dict, None]) -> tuple[Observation, Reward, bool, dict]:
+        """
+        Execute actions from Action model (or legacy format) and advance the world by one time step.
         """
         assert not self.done, "Episode is over. Call reset() first."
 
-        # Support single dict or None for backward compatibility
-        if actions is None:
+        if action and hasattr(action, 'assignments'):
+            actions = action.assignments
+        elif isinstance(action, list):
+            actions = action
+        elif isinstance(action, dict):
+            actions = [action]
+        else:
             actions = []
-        elif isinstance(actions, dict):
-            actions = [actions]
 
         reward_parts = {}
 
@@ -279,14 +293,14 @@ class CrisisEnv:
         self.step_count += 1
 
         # 6. Compute reward and check termination
-        reward = self._compute_reward(reward_parts)
+        total_reward = self._compute_reward(reward_parts)
         self.done = self._check_done()
         info = self._build_info()
 
-        return self.state(), reward, self.done, info
+        return self.state(), Reward(score=total_reward, details=reward_parts), self.done, info
 
-    def state(self) -> dict:
-        """Return the current observable state as a plain dict."""
+    def _get_legacy_state(self) -> dict:
+        """Return the current observable state as a plain dict (used to build observation)."""
         return {
             "step": self.step_count,
             "difficulty": self.difficulty,
