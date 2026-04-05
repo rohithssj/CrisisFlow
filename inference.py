@@ -1,63 +1,63 @@
-"""
-inference.py — Execution script for the CrisisFlow simulation.
-Uses the upgraded BaselineAgent to run a typical episode in the environment.
-"""
-
-import time
+import os
+import yaml
 from crisisflow.environment.crisis_env import CrisisEnv
+from crisisflow.environment.models import Action
 from crisisflow.agents.baseline_agent import BaselineAgent
+from grader import grade
 
-def run_simulation(difficulty="medium"):
-    # 1. Initialize environment and agent
-    print(f"--- INITIALIZING CRISISFLOW ({difficulty.upper()} MODE) ---")
-    # env initialization updated to not pass a seed for dynamic sessions
-    env = CrisisEnv(difficulty=difficulty)
-    agent = BaselineAgent(env)
-    
-    # 2. Reset episode
-    state = env.reset()
-    done = False
-    
-    print("\nStarting simulation loop...")
-    print(f"{'Step':<6} | {'Action':<25} | {'Reward':<8} | {'Active':<8} | {'Rescued':<8} | {'Dead':<8}")
-    print("-" * 80)
+# Load environment variables (MANDATORY)
+API_BASE_URL = os.getenv("API_BASE_URL", "")
+MODEL_NAME = os.getenv("MODEL_NAME", "")
+HF_TOKEN = os.getenv("HF_TOKEN", "")
 
-    # 3. Main loop
-    while not done:
-        actions = agent.select_action(state)
-        next_state, reward, done, info = env.step(actions)
-        
-        # Log progress
-        step = info['steps_taken']
-        
-        # Calculate active patients from Observation
-        active = sum(1 for p in next_state.patients if not p.get('rescued') and not p.get('dead'))
-        rescued = info['rescued']
-        dead = info['dead']
-        
-        # Simplified dispatch count logging
-        if actions:
-            action_str = f"Dispatched {len(actions)} Units"
-        else:
-            action_str = "Wait (No Action)"
-        
-        # Handle reward model or float
-        reward_val = reward.score if hasattr(reward, 'score') else reward
-        print(f"{step:<6} | {action_str:<25} | {reward_val:<8.3f} | {active:<8} | {rescued:<8} | {dead:<8}")
-        
-        state = next_state
+# Load task (use medium by default)
+with open("crisisflow/tasks/medium.yaml") as f:
+    task = yaml.safe_load(f)
 
-    # 4. Final summary
-    print("-" * 80)
-    print("\n--- SIMULATION COMPLETE ---")
-    
-    # Updated metrics printout for professional summary
-    print(f"Survival Rate     : {info['survival_rate']}%")
-    print(f"Critical Rescued  : {info['critical_rescued']}")
-    print(f"Overflow Rescues  : {info['overflow_rescues']}")
-    print(f"Avg Response Time : {info['avg_response_time']} steps")
-    print(f"Final Score       : {info['score']}")
-    print("-" * 30)
+# Initialize environment
+env = CrisisEnv(
+    num_patients=task["num_patients"],
+    num_ambulances=task["num_ambulances"],
+    hospital_capacity=task["hospital_capacity"],
+    seed=task["seed"]
+)
 
-if __name__ == "__main__":
-    run_simulation(difficulty="medium")
+agent = BaselineAgent(env)
+
+print("[START]")
+
+obs = env.reset()
+done = False
+step = 0
+
+while not done:
+    actions = agent.select_action(obs)
+    # The agent returns a list of dictionaries, convert it into Action model
+    action = Action(assignments=actions)
+
+    obs, reward, done, info = env.step(action)
+
+    action_desc = "Moving"
+    if hasattr(action, "assignments") and action.assignments:
+        action_desc = f"Assigned {len(action.assignments)} tasks"
+
+    if info.get("rescued_patient_id") is not None:
+        action_desc = f"Rescued Patient {info['rescued_patient_id']}"
+    elif info.get("death_occurred"):
+        action_desc = "Patient Died"
+
+    reward_val = reward.score if hasattr(reward, 'score') else reward
+    print(f"[STEP {step}] Reward: {reward_val:.4f} | Action: {action_desc}")
+
+    step += 1
+
+# Compute final score
+metrics = {
+    "survival_rate": info.get("survival_rate", 0),
+    "avg_response_time": info.get("avg_response_time", 0),
+    "deaths": info.get("deaths", 0)
+}
+
+final_score = grade(metrics)
+
+print(f"[END] Score: {final_score:.2f}")
