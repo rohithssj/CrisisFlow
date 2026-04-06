@@ -11,411 +11,452 @@ from crisisflow.ui.map import draw_pydeck_map
 
 # ── PAGE CONFIG ──
 st.set_page_config(
-    page_title="CRISISFLOW | AI COMMAND CENTER",
+    page_title="CRISISFLOW | COMMAND CENTER",
     page_icon="🚑",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"
 )
 
-# ── PREMIUM DESIGN SYSTEM (CSS) ──
+# ── PREMIUM GLASSMORPHISM DESIGN SYSTEM (MANDATORY) ──
 st.markdown("""
-    <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Roboto+Mono:wght@400;700&display=swap');
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap');
 
-    html, body, [data-testid="stAppViewContainer"], [class*="css"] {
-        font-family: 'Inter', sans-serif !important;
-    }
+:root {
+    --bg-dark: #0B0F14;
+    --bg-gradient: linear-gradient(135deg, #0B0F14 0%, #111827 100%);
+    --glass-bg: rgba(255, 255, 255, 0.05);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --accent-cyan: #00E5FF;
+    --accent-green: #00FF88;
+    --accent-warning: #FFA500;
+    --accent-danger: #FF3B3B;
+    --text-primary: #E5E7EB;
+    --text-muted: #9CA3AF;
+}
 
-    :root {
-        --bg-dark: #080a0f;
-        --panel-bg: rgba(16, 22, 32, 0.8);
-        --accent-blue: #00d4ff;
-        --accent-red: #ff3e3e;
-        --accent-orange: #ffa500;
-        --accent-green: #00ff88;
-        --text-main: #e0e6ed;
-        --text-dim: #94a3b8;
-        --border: 1px solid rgba(255, 255, 255, 0.1);
-    }
+html, body, [data-testid="stAppViewContainer"] {
+    background: var(--bg-gradient) !important;
+    font-family: 'Inter', sans-serif !important;
+    color: var(--text-primary);
+}
 
-    .main {
-        background-color: var(--bg-dark);
-        color: var(--text-main);
-    }
+/* Glass Card Component */
+.glass-card {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(12px);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+}
 
-    /* Force Dark Theme on App Container */
-    [data-testid="stAppViewContainer"] {
-        background-color: var(--bg-dark) !important;
-    }
+.cyan-glow {
+    box-shadow: 0 0 15px rgba(0, 229, 255, 0.2);
+    border-color: rgba(0, 229, 255, 0.3) !important;
+}
 
-    /* Metric Card Styling */
-    .metric-card {
-        background: var(--panel-bg);
-        border: var(--border);
-        border-radius: 12px;
-        padding: 15px 10px; 
-        margin-bottom: 10px;
-        backdrop-filter: blur(10px);
-        text-align: center;
-    }
-    .metric-label {
-        color: var(--text-dim);
-        font-size: 14px;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 1.5px;
-        margin-bottom: 5px;
-        display: block;
-    }
-    .metric-value {
-        color: var(--accent-green);
-        font-size: 28px;
-        font-weight: 800;
-        font-family: 'Roboto Mono', monospace;
-        line-height: 1;
-    }
-    .final-score {
-        background: linear-gradient(135deg, #111827 0%, #0c111a 100%);
-        border: 2px solid var(--accent-blue);
-        text-align: center;
-        padding: 25px;
-        border-radius: 16px;
-        margin-bottom: 20px;
-        box-shadow: 0 0 30px rgba(0, 212, 255, 0.2);
-    }
-    .final-score-label {
-        font-size: 16px;
-        color: var(--text-dim);
-        font-weight: 700;
-        letter-spacing: 2px;
-        text-transform: uppercase;
-        margin-bottom: 5px;
-    }
-    .final-score-value {
-        font-size: 48px;
-        font-weight: 950;
-        color: var(--accent-blue);
-        text-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
-        margin: 0;
-        line-height: 1;
-    }
+/* Typography Classes */
+.title-bold { font-weight: 800; text-transform: uppercase; letter-spacing: 2px; }
+.metric-large { font-size: 42px; font-weight: 800; line-height: 1; margin: 8px 0; }
+.label-small { font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
 
-    /* Decision Log Styling */
-    .log-container {
-        background: #111827;
-        border: var(--border);
-        border-radius: 10px;
-        padding: 15px;
-        height: 300px;
-        overflow-y: auto;
-        font-family: 'Roboto Mono', monospace;
-        font-size: 0.85rem;
-        color: var(--text-dim);
-        margin-bottom: 20px;
-    }
-    .log-entry {
-        padding: 6px 0;
-        border-bottom: 1px solid rgba(255,255,255,0.05);
-    }
-    .log-ambulance { color: var(--accent-blue); font-weight: bold; }
-    .log-severity-3 { color: var(--accent-red); }
-    </style>
-    """, unsafe_allow_html=True)
+/* Metrics Grid Helper */
+.metrics-grid-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.metrics-grid-item {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--glass-border);
+    padding: 12px;
+    border-radius: 12px;
+    text-align: center;
+}
+
+/* Log Container */
+.intelligence-feed {
+    height: 250px;
+    overflow-y: auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.log-entry { margin-bottom: 4px; border-bottom: 1px solid rgba(255, 255, 255, 0.03); padding-bottom: 2px; }
+.log-cyan { color: var(--accent-cyan); }
+.log-red { color: var(--accent-danger); }
+.log-green { color: var(--accent-green); }
+
+/* Hide Streamlit components */
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+.stDeployButton {display:none;}
+
+/* Sidebar Overrides */
+[data-testid="stSidebar"] {
+    background: rgba(10, 15, 20, 0.95) !important;
+    border-right: 1px solid var(--glass-border);
+}
+/* Comparison Table */
+.comp-table {
+    width: 100%;
+    margin-top: 10px;
+    border-collapse: collapse;
+}
+
+.comp-table th, .comp-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.comp-table th {
+    color: var(--text-muted);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.comp-table td {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.winner-badge {
+    background: linear-gradient(90deg, rgba(0, 229, 255, 0.2), transparent);
+    border-left: 4px solid var(--accent-cyan);
+    padding: 12px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    font-weight: 700;
+}
+</style>
+""", unsafe_allow_html=True)
 
 # ── LOGIC HELPER ──
 def get_benchmarking_results(difficulty, seed):
+    from crisisflow.agents.improved_agent import ImprovedAgent
     res = {}
-    for name, agent_func in [("Baseline", lambda e: BaselineAgent(e).select_action), ("Random", lambda e: random_agent_action)]:
+    agents = [
+        ("Baseline", BaselineAgent),
+        ("Improved", ImprovedAgent)
+    ]
+    for name, agent_cls in agents:
         env = CrisisEnv(difficulty=difficulty.lower(), seed=seed)
-        sel_act = agent_func(env)
+        agent = agent_cls(env)
         s = env.reset()
         d = False
+        reward_history = []
         while not d:
-            a = sel_act(s)
-            s, _, d, inf = env.step(a)
+            a = agent.select_action(s)
+            s, r, d, inf = env.step(a)
+            # Handle reward object or scalar
+            r_val = r.score if hasattr(r, 'score') else r
+            reward_history.append(r_val)
+        
+        # Add historical metrics to info
+        inf['reward_history'] = reward_history
         res[name] = inf
     return res
 
-def random_agent_action(state):
-    active = [p for p in state["patients"] if not p["rescued"] and not p["dead"]]
-    free = [a for a in state["ambulances"] if not a["busy"] and not a.get("on_cooldown", False)]
-    if not active or not free: return []
-    actions = []
-    used_pats = set()
-    shuffled_free = free[:]
-    random.shuffle(shuffled_free)
-    for amb in shuffled_free:
-        available = [p for p in active if p["id"] not in used_pats]
-        if not available: break
-        pat = random.choice(available)
-        actions.append({"ambulance_id": amb["id"], "patient_id": pat["id"]})
-        used_pats.add(pat["id"])
-    return actions
-
 # ── SESSION STATE ──
 if 'running' not in st.session_state: st.session_state.running = False
-if 'paused' not in st.session_state: st.session_state.paused = False
 if 'rewards' not in st.session_state: st.session_state.rewards = []
 if 'env' not in st.session_state: st.session_state.env = None
 if 'state' not in st.session_state: 
-    # Initialize a default state for the initial dashboard view
     _init_env = CrisisEnv(difficulty="medium", seed=42)
     st.session_state.state = _init_env.reset()
     st.session_state.env = _init_env
     st.session_state.agent = BaselineAgent(_init_env)
+    st.session_state.prev_state = None
 
 if 'speed' not in st.session_state: st.session_state.speed = 0.3
+if 'agent_type' not in st.session_state: st.session_state.agent_type = "Baseline"
+if 'log_history' not in st.session_state: st.session_state.log_history = []
+if 'compare_results' not in st.session_state: st.session_state.compare_results = None
 
-# ── SIDEBAR: NAVIGATION & CONTROLS ──
-st.sidebar.markdown("<h1 style='color:#00d4ff; font-family:Roboto Mono;'>CRISISFLOW</h1>", unsafe_allow_html=True)
-st.sidebar.markdown("---")
-
-nav = st.sidebar.radio("Command Navigation", ["Tactical Map", "Agent Comparison", "Mission Logs"])
-
-st.sidebar.markdown("### Mission Configuration")
-diff = st.sidebar.selectbox("Difficulty Level", ["Easy", "Medium", "Hard"], index=1)
-seed = st.sidebar.number_input("System Seed", min_value=0, value=42)
-
-st.sidebar.markdown("### Simulation Speed")
-s_col1, s_col2, s_col3 = st.sidebar.columns(3)
-if s_col1.button("1x"): st.session_state.speed = 0.4
-if s_col2.button("2x"): st.session_state.speed = 0.15
-if s_col3.button("4x"): st.session_state.speed = 0.05
-
-st.sidebar.markdown("### Execution")
-c1, c2 = st.sidebar.columns(2)
-if c1.button("Start Deployment", type="primary"):
-    st.session_state.running = True
-    st.session_state.paused = False
-    st.session_state.env = CrisisEnv(difficulty=diff.lower(), seed=seed)
-    st.session_state.agent = BaselineAgent(st.session_state.env)
-    st.session_state.state = st.session_state.env.reset()
-    st.session_state.rewards = []
-
-if c2.button("Reset System"):
-    st.session_state.running = False
-    st.session_state.paused = False
-    st.session_state.rewards = []
-    st.rerun()
-
-# ── COMPONENT HELPERS ──
-def metric_card(title, value, color="#00ff88"):
-    return f"""
-    <div style="
-        background:#111827;
-        padding:16px;
-        border-radius:12px;
-        text-align:center;
-        margin-bottom:10px;
-        border:1px solid #1F2937;
-    ">
-        <div style="font-size:14px; color:#9CA3AF; margin-bottom:6px; text-transform:uppercase; font-weight:600; letter-spacing:1px;">
-            {title}
-        </div>
-        <div style="font-size:28px; font-weight:700; color:{color}; font-family:'Roboto Mono', monospace;">
-            {value}
-        </div>
-    </div>
-    """
-
-def big_score_card(value):
-    return f"""
-    <div style="
-        background:#111827;
-        padding:20px;
-        border-radius:14px;
-        text-align:center;
-        border:1px solid #1F2937;
-        margin-bottom:12px;
-        box-shadow: 0 0 20px rgba(0, 229, 255, 0.1);
-    ">
-        <div style="font-size:14px; color:#9CA3AF; font-weight:700; letter-spacing:2px; margin-bottom:8px;">
-            MISSION EFFICIENCY
-        </div>
-        <div style="font-size:42px; font-weight:800; color:#00E5FF; text-shadow:0 0 10px rgba(0,229,255,0.3);">
-            {value}
-        </div>
-    </div>
-    """
-
-# ── MAIN VIEWPORT ──
-if nav == "Tactical Map":
-    l_col, r_col = st.columns([0.7, 0.3])
-
-    with r_col:
-        st.markdown("## 🚨 CrisisFlow Command Center")
+# ── SIDEBAR: CONTROL PANEL ──
+with st.sidebar:
+    st.markdown("<h1 class='title-bold' style='color:var(--accent-cyan); margin-bottom:0;'>⚡ CrisisFlow</h1>", unsafe_allow_html=True)
+    st.markdown("<p class='label-small' style='margin-top:-10px; margin-bottom:24px;'>Command Center</p>", unsafe_allow_html=True)
+    
+    st.markdown("<p class='label-small'>1. Scenario Selector</p>", unsafe_allow_html=True)
+    diff = st.radio("Difficulty", ["Easy", "Medium", "Hard"], horizontal=True, label_visibility="collapsed", index=1)
+    
+    st.markdown("<br><p class='label-small'>2. Agent Selector</p>", unsafe_allow_html=True)
+    agent_choice = st.radio("Agent", ["Baseline", "Improved", "Compare Both"], horizontal=True, label_visibility="collapsed", index=0)
+    st.session_state.agent_type = agent_choice
+    
+    st.markdown("<br><p class='label-small'>3. Simulation Controls</p>", unsafe_allow_html=True)
+    sim_speed = st.slider("Response Speed", 0.05, 0.5, 0.2, step=0.05, label_visibility="collapsed")
+    st.session_state.speed = sim_speed
+    explain_toggle = st.toggle("Explain Decisions", value=True)
+    
+    st.markdown("<br><p class='label-small'>4. Actions</p>", unsafe_allow_html=True)
+    if st.button("▶ Start Simulation", type="primary", use_container_width=True):
+        from crisisflow.agents.improved_agent import ImprovedAgent
         
-        # Unified Metric Placeholders
-        score_placeholder = st.empty()
-        
-        m_col1, m_col2 = st.columns(2)
-        with m_col1:
-            survival_placeholder = st.empty()
-            critical_placeholder = st.empty()
-        with m_col2:
-            deaths_placeholder = st.empty()
-            response_placeholder = st.empty()
-
-        # Initial Population (Prevent Black UI)
-        if st.session_state.state:
-            def get_info():
-                env = st.session_state.get('env')
-                return env._build_info() if env else {"score": 0.0, "survival_rate": 0, "dead": 0, "critical_rescued": 0, "avg_response_time": 0}
-            
-            info = get_info()
-            score_placeholder.markdown(big_score_card(f"{info['score']:.4f}"), unsafe_allow_html=True)
-            survival_placeholder.markdown(metric_card("Survival Rate", f"{info['survival_rate']}%", "#00ff88"), unsafe_allow_html=True)
-            deaths_placeholder.markdown(metric_card("Fatalities", f"{info['dead']}", "#ff3b3b"), unsafe_allow_html=True)
-            critical_placeholder.markdown(metric_card("Critical Saved", f"{info['critical_rescued']}", "#00e5ff"), unsafe_allow_html=True)
-            response_placeholder.markdown(metric_card("Avg Response", f"{info['avg_response_time']}s", "#00e5ff"), unsafe_allow_html=True)
+        if agent_choice == "Compare Both":
+            with st.spinner("⚔️ Tactical Benchmarking in Progress..."):
+                st.session_state.compare_results = get_benchmarking_results(diff, 42)
+                st.session_state.running = False # Don't run the regular loop
+                st.toast("COMPILATION COMPLETE", icon="📊")
         else:
-            score_placeholder.markdown(big_score_card("0.0000"), unsafe_allow_html=True)
-            survival_placeholder.markdown(metric_card("Survival Rate", "0%", "#00ff88"), unsafe_allow_html=True)
-            deaths_placeholder.markdown(metric_card("Fatalities", "0", "#ff3b3b"), unsafe_allow_html=True)
-            critical_placeholder.markdown(metric_card("Critical Saved", "0", "#00e5ff"), unsafe_allow_html=True)
-            response_placeholder.markdown(metric_card("Avg Response", "0s", "#00e5ff"), unsafe_allow_html=True)
+            st.session_state.running = True
+            st.session_state.env = CrisisEnv(difficulty=diff.lower(), seed=42)
+            if agent_choice == "Baseline":
+                st.session_state.agent = BaselineAgent(st.session_state.env)
+            else:
+                st.session_state.agent = ImprovedAgent(st.session_state.env)
+            st.session_state.state = st.session_state.env.reset()
+            st.session_state.rewards = []
+            st.session_state.log_history = []
+            st.session_state.compare_results = None
+        
+    if st.button("🔄 Reset Scenario", use_container_width=True):
+        st.session_state.running = False
+        st.session_state.rewards = []
+        st.session_state.log_history = []
+        st.rerun()
 
-        # Operational Intelligence
-        st.markdown("### Operational Intelligence")
-        log_placeholder = st.empty()
+# ── COMPONENT HELPERS (GLASSMORPHISM) ──
+def get_mission_efficiency_card(value):
+    return f"""
+    <div class="glass-card cyan-glow" style="text-align:center;">
+        <div class="label-small">Mission Efficiency</div>
+        <div class="metric-large" style="color:var(--accent-cyan); text-shadow: 0 0 15px rgba(0,229,255,0.4);">{value}</div>
+    </div>
+    """
 
-        # Analytics Bottom
-        st.markdown("### Performance Stream")
-        chart_placeholder = st.empty()
+def get_metrics_grid(survival, deaths, critical, response):
+    return f"""
+    <div class="metrics-grid-container">
+        <div class="metrics-grid-item">
+            <div class="label-small">Survival Rate</div>
+            <div style="font-size:24px; font-weight:800; color:var(--accent-green);">{survival}</div>
+        </div>
+        <div class="metrics-grid-item">
+            <div class="label-small">Fatalities</div>
+            <div style="font-size:24px; font-weight:800; color:var(--accent-danger);">{deaths}</div>
+        </div>
+        <div class="metrics-grid-item">
+            <div class="label-small">Critical Saved</div>
+            <div style="font-size:24px; font-weight:800; color:var(--accent-cyan);">{critical}</div>
+        </div>
+        <div class="metrics-grid-item">
+            <div class="label-small">Avg Response</div>
+            <div style="font-size:24px; font-weight:800; color:var(--accent-cyan);">{response}</div>
+        </div>
+    </div>
+    """
 
-    with l_col:
-        st.markdown("### 🗺️ Tactical Deployment Map")
+# ── COMPARISON DASHBOARD RENDERER ──
+def render_comparison_dashboard(results):
+    if not results: return
+    
+    b = results.get("Baseline", {})
+    i = results.get("Improved", {})
+    
+    # Calculate performance delta
+    b_score = b.get('score', 0)
+    i_score = i.get('score', 0)
+    perf_delta = ((i_score - b_score) / b_score * 100) if b_score > 0 else 0
+    
+    st.markdown(f"""
+    <div class="winner-badge">
+        🏆 Improved Agent performs better (+{perf_delta:.1f}%)
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Metrics Table
+    st.markdown(f"""
+    <table class="comp-table">
+        <tr>
+            <th>Metric</th>
+            <th>Baseline</th>
+            <th>Improved</th>
+        </tr>
+        <tr>
+            <td>Survival Rate</td>
+            <td style="color:var(--text-muted);">{b.get('survival_rate', 0)*100:.1f}%</td>
+            <td style="color:var(--accent-green);">{i.get('survival_rate', 0)*100:.1f}%</td>
+        </tr>
+        <tr>
+            <td>Deaths</td>
+            <td style="color:var(--text-muted);">{b.get('deaths', 0)}</td>
+            <td style="color:var(--accent-danger);">{i.get('deaths', 0)}</td>
+        </tr>
+        <tr>
+            <td>Response Time</td>
+            <td style="color:var(--text-muted);">{b.get('avg_response_time', 0):.2f}s</td>
+            <td style="color:var(--accent-cyan);">{i.get('avg_response_time', 0):.2f}s</td>
+        </tr>
+    </table>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    # Charts
+    c1, c2 = st.columns(2)
+    
+    with c1:
+        st.markdown("<p class='label-small'>Score Comparison</p>", unsafe_allow_html=True)
+        fig_bar = go.Figure(data=[
+            go.Bar(name='Baseline', x=['Baseline'], y=[b_score*100], marker_color='#9CA3AF'),
+            go.Bar(name='Improved', x=['Improved'], y=[i_score*100], marker_color='#00E5FF')
+        ])
+        fig_bar.update_layout(
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            font_color='#E5E7EB',
+            margin=dict(l=0, r=0, t=20, b=0),
+            height=300,
+            showlegend=False
+        )
+        st.plotly_chart(fig_bar, use_container_width=True, config={'displayModeBar': False})
+
+    with c2:
+        st.markdown("<p class='label-small'>Reward Over Time</p>", unsafe_allow_html=True)
+        fig_line = go.Figure()
+        fig_line.add_trace(go.Scatter(y=b.get('reward_history', []), name='Baseline', line=dict(color='#9CA3AF', width=2)))
+        fig_line.add_trace(go.Scatter(y=i.get('reward_history', []), name='Improved', line=dict(color='#00E5FF', width=3)))
+        fig_line.update_layout(
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            font_color='#E5E7EB',
+            margin=dict(l=0, r=0, t=20, b=0),
+            height=300,
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+        )
+        st.plotly_chart(fig_line, use_container_width=True, config={'displayModeBar': False})
+# ── MAIN COMMAND VIEWPORT ──
+if st.session_state.agent_type == "Compare Both" and st.session_state.compare_results:
+    st.markdown("<p class='label-small' style='margin-bottom:24px;'>Strategic Agent Comparison Dashboard</p>", unsafe_allow_html=True)
+    render_comparison_dashboard(st.session_state.compare_results)
+else:
+    col_sidebar, col_map, col_intel = st.columns([0.2, 0.55, 0.25])
+    
+    with col_map:
+        st.markdown("<p class='label-small' style='margin-bottom:8px;'>Tactical Deployment Map</p>", unsafe_allow_html=True)
         map_placeholder = st.empty()
         
-        st.markdown("### Infrastructure Network")
-        hosp_placeholder = st.empty()
-        step_status = st.empty()
+        # Grid Status Info
+        info_cols = st.columns(3)
+        with info_cols[0]: step_placeholder = st.empty()
+        with info_cols[1]: status_placeholder = st.empty()
+        with info_cols[2]: active_count_placeholder = st.empty()
 
-        # Initial Map Render
-        if st.session_state.state and not st.session_state.running:
-            state_dict = st.session_state.state.model_dump() if hasattr(st.session_state.state, "model_dump") else st.session_state.state
-            prev_state_dict = st.session_state.prev_state.model_dump() if hasattr(st.session_state.prev_state, "model_dump") else st.session_state.get('prev_state')
-            fig = draw_pydeck_map(state_dict, prev_state=prev_state_dict, alpha=1.0)
-            map_placeholder.plotly_chart(fig, width="stretch", key="initial_load_tactical")
+    with col_intel:
+        st.markdown("<p class='label-small' style='margin-bottom:8px;'>Intelligence System</p>", unsafe_allow_html=True)
+        
+        # 🟦 TOP CARD — MISSION EFFICIENCY
+        efficiency_placeholder = st.empty()
+        
+        # 📦 METRICS GRID (2x2)
+        metrics_placeholder = st.empty()
+        
+        # ⚔️ AGENT COMPARISON
+        st.markdown("<br><p class='label-small'>Agent Comparison</p>", unsafe_allow_html=True)
+        comparison_placeholder = st.empty()
+        
+        # 🧠 OPERATIONAL INTELLIGENCE FEED
+        st.markdown("<br><p class='label-small'>Operational Intelligence Feed</p>", unsafe_allow_html=True)
+        log_placeholder = st.empty()
+        
+        # 📈 REWARD PERFORMANCE CHART
+        # 📈 REWARD PERFORMANCE CHART
+        st.markdown("<br><p class='label-small'>Reward Performance</p>", unsafe_allow_html=True)
+        chart_placeholder = st.empty()
+
+    # ── TACTICAL VIEW LOGIC (Only runs when placeholders exist) ──
+    def update_ui_placeholders(info, rewards, logs, compare_data=None):
+        efficiency_placeholder.markdown(get_mission_efficiency_card(f"{info['score']*100:.1f}%"), unsafe_allow_html=True)
+        metrics_placeholder.markdown(get_metrics_grid(
+            f"{info['survival_rate']*100:.1f}%",
+            f"{info['deaths']}",
+            f"{info['critical_saved']}",
+            f"{info['avg_response_time']}s"
+        ), unsafe_allow_html=True)
+        
+        # Logs
+        log_content = "".join(logs)
+        log_placeholder.markdown(f'<div class="intelligence-feed">{log_content}</div>', unsafe_allow_html=True)
+        
+        # Chart
+        if rewards:
+            chart_placeholder.line_chart(rewards, color="#00E5FF")
+        
+        # Comparison Section
+        # (Removed old inline comparison logic in favor of dedicated dashboard)
+        pass
+
+    # Initial Render
+    if st.session_state.state:
+        env_info = st.session_state.env._build_info() if st.session_state.env else {"score": 0, "survival_rate": 0, "deaths": 0, "critical_saved": 0, "avg_response_time": 0}
+        update_ui_placeholders(env_info, st.session_state.rewards, st.session_state.log_history)
+        
+        state_dict = st.session_state.state.model_dump() if hasattr(st.session_state.state, "model_dump") else st.session_state.state
+        fig = draw_pydeck_map(state_dict, prev_state=st.session_state.prev_state, alpha=1.0)
+        # map_placeholder.plotly_chart is called in the loop or initial render
+        # Initial map render:
+        map_placeholder.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
 
     # Simulation Inner Loop
-    # Simulation Main Control Flow (Flicker-Free Continuous Update)
-    if st.session_state.running and not st.session_state.paused:
+    if st.session_state.running:
         env = st.session_state.env
         agent = st.session_state.agent
-        if 'log_history' not in st.session_state: st.session_state.log_history = []
         
-        max_steps = {"easy": 500, "medium": 800, "hard": 1000}[diff.lower()]
-        
-        while st.session_state.running and not st.session_state.paused:
+        while st.session_state.running:
             state = st.session_state.state
             state_dict = state.model_dump() if hasattr(state, "model_dump") else state
+            
+            # Select Action
             actions = agent.select_action(state)
             
-            # Generate Decision Trace
+            # Decision Logging
             for action in actions:
                 p_id = action['patient_id']
                 a_id = action['ambulance_id']
                 p_data = next((p for p in state_dict['patients'] if p['id'] == p_id), None)
                 sev = p_data['severity'] if p_data else 1
-                sev_label = ["Minor", "Serious", "Critical"][sev-1]
-                log_time = time.strftime('%H:%M:%S')
-                log_msg = f'<div class="log-entry">[{log_time}] <span class="log-ambulance">AMB-{a_id:02d}</span> → <span class="log-severity-{sev}">[{sev_label}]</span> Patient P{p_id:02d}</div>'
-                st.session_state.log_history.insert(0, log_msg)
-                if len(st.session_state.log_history) > 30: st.session_state.log_history.pop()
+                sev_class = ["log-green", "log-cyan", "log-red"][sev-1]
+                st.session_state.log_history.insert(0, f'<div class="log-entry">AMB-{a_id:02d} <span class="log-cyan">→</span> <span class="{sev_class}">P{p_id:02d}</span></div>')
+                if len(st.session_state.log_history) > 50: st.session_state.log_history.pop()
 
+            # Step Environment
             next_state, reward, done, info = env.step(actions)
             
-            # State Update (Memory)
+            # State Update
             st.session_state.prev_state = state
             st.session_state.state = next_state
             
             reward_val = reward.score if hasattr(reward, 'score') else reward
             st.session_state.rewards.append(reward_val)
             
-            # ──────── COMPONENT UPDATE (ZERO-REFRESH) ────────
+            # ── UPDATE UI ──
+            update_ui_placeholders(info, st.session_state.rewards, st.session_state.log_history)
             
-            # 1. Mission Efficiency & Metrics (Unified Cards)
-            score_placeholder.markdown(big_score_card(f"{info['score']:.4f}"), unsafe_allow_html=True)
-            survival_placeholder.markdown(metric_card("Survival Rate", f"{info['survival_rate']}%", "#00ff88"), unsafe_allow_html=True)
-            deaths_placeholder.markdown(metric_card("Fatalities", f"{info['dead']}", "#ff3b3b"), unsafe_allow_html=True)
-            critical_placeholder.markdown(metric_card("Critical Saved", f"{info['critical_rescued']}", "#00e5ff"), unsafe_allow_html=True)
-            response_placeholder.markdown(metric_card("Avg Response", f"{info['avg_response_time']}s", "#00e5ff"), unsafe_allow_html=True)
-            
-            # 2. Intelligence Feed (Scroll-Locked Box)
-            log_content = "".join(st.session_state.log_history)
-            log_placeholder.markdown(f'<div class="log-container">{log_content}</div>', unsafe_allow_html=True)
-            
-            # 3. Tactical Environment
+            # Map Update
             next_state_dict = next_state.model_dump() if hasattr(next_state, "model_dump") else next_state
-            prev_state_dict = st.session_state.prev_state.model_dump() if hasattr(st.session_state.prev_state, "model_dump") else st.session_state.get('prev_state')
-            fig = draw_pydeck_map(next_state_dict, prev_state=prev_state_dict, alpha=0.3)
-            # Make the figure mathematically unique each step to bypass DuplicateElementId in the while loop
-            fig.update_layout(title=f"<!-- step {next_state_dict['time_step']} -->")
-            map_placeholder.plotly_chart(fig, width="stretch")
+            fig = draw_pydeck_map(next_state_dict, prev_state=st.session_state.prev_state, alpha=0.3)
+            map_placeholder.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
             
-            # 4. Infrastructure Tracking
-            with hosp_placeholder.container():
-                for h in next_state_dict['hospitals']:
-                    pct = h['current_load'] / h['capacity']
-                    st.progress(pct, text=f"Station-{h['id']:02d}: {h['current_load']}/{h['capacity']}")
-            
-            # 5. Performance Trend
-            if st.session_state.rewards:
-                chart_placeholder.line_chart(st.session_state.rewards, color="#00d4ff")
-                
-            step_status.caption(f"SYSTEM STEP: {next_state_dict['time_step']} / {max_steps} | CLOCK: {time.strftime('%H:%M:%S')}")
+            # Grid Status Update
+            step_placeholder.markdown(f"<div class='label-small'>Step</div><div style='font-size:18px; font-weight:800;'>{next_state_dict['time_step']}</div>", unsafe_allow_html=True)
+            status_placeholder.markdown(f"<div class='label-small'>Status</div><div style='font-size:18px; font-weight:800; color:var(--accent-green);'>ACTIVE</div>", unsafe_allow_html=True)
+            active_count = sum(1 for p in next_state_dict['patients'] if not p['rescued'] and not p['dead'])
+            active_count_placeholder.markdown(f"<div class='label-small'>Active Crises</div><div style='font-size:18px; font-weight:800; color:var(--accent-warning);'>{active_count}</div>", unsafe_allow_html=True)
 
             if done:
                 st.session_state.running = False
-                st.success(f"TACTICAL OPERATION COMPLETE: SCORE {info['score']:.4f}")
+                st.toast("MISSION COMPLETE", icon="✅")
                 break
             
             time.sleep(st.session_state.speed)
-
-
-elif nav == "Agent Comparison":
-    st.title("Autonomous Benchmarking Analytics")
-    st.markdown("Evaluating the performance delta between the **Baseline AI Agent** and **Random Dispatch Selection**.")
-    
-    col_a, col_b = st.columns(2)
-    with col_a:
-        c_diff = st.selectbox("Benchmark Complexity", ["Easy", "Medium", "Hard"], index=1, key="bench_diff")
-    with col_b:
-        c_seed = st.number_input("Benchmark Seed", min_value=0, value=42, key="bench_seed")
-    
-    if st.button("Initialize Benchmarking", type="primary"):
-        with st.spinner("Executing Scenario Simulations..."):
-            results = get_benchmarking_results(c_diff, c_seed)
-            
-            # Metrics Display
-            m_col1, m_col2 = st.columns(2)
-            for i, (name, inf) in enumerate(results.items()):
-                with [m_col1, m_col2][i]:
-                    st.markdown(f'<div class="metric-card">', unsafe_allow_html=True)
-                    st.subheader(f"Agent: {name.upper()}")
-                    st.metric("Survival Rate", f"{inf['survival_rate']}%")
-                    st.metric("Final Score", f"{inf['score']:.4f}")
-                    st.metric("Fatalities", inf['dead'], delta_color="inverse")
-                    st.markdown('</div>', unsafe_allow_html=True)
-
-            # Chart
-            comp_df = pd.DataFrame({
-                "Metric": ["Survival Rate", "Final Score (x100)"],
-                "Baseline": [results['Baseline']['survival_rate'], results['Baseline']['score'] * 100],
-                "Random": [results['Random']['survival_rate'], results['Random']['score'] * 100]
-            }).set_index("Metric")
-            
-            st.bar_chart(comp_df)
-            
-            diff_rate = results['Baseline']['survival_rate'] - results['Random']['survival_rate']
-            if diff_rate > 0:
-                st.success(f"**Analytics Result:** Baseline AI demonstrated a {diff_rate:.1f}% improvement in survival efficiency.")
-
-elif nav == "Mission Logs":
-    st.title("Operational Event Logs")
-    st.info("System logs are automatically recorded during the tactical deployment phase. Start a simulation to view live event tracing.")
-    if st.session_state.state:
-        st.dataframe(pd.DataFrame(st.session_state.state['patients']), use_container_width=True)
-    else:
-        st.write("No active operation data found.")
