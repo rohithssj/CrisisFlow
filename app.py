@@ -67,6 +67,19 @@ div[data-testid="stVerticalBlock"]:first-child {
     padding-top: 0 !important;
 }
 
+div[data-testid="stVerticalBlock"] > div[data-testid="stVerticalBlockSeparator"] {
+    display: none !important;
+}
+
+div[data-testid="element-container"]:has(> div[data-testid="stMarkdownContainer"]) + div[data-testid="element-container"] {
+    margin-top: 0 !important;
+}
+
+.stElementContainer, .element-container {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+}
+
 /* CARDS & GRID */
 .glass-card {
     background: var(--glass-bg);
@@ -139,6 +152,21 @@ section[data-sticky-sidebar="true"] { display: none !important; }
 .log-entry { margin-bottom: 8px; border-bottom: 1px solid rgba(255, 255, 255, 0.03); padding-bottom: 4px; }
 .log-entry-cyan { color: var(--accent-cyan); }
 .log-entry-teal { color: var(--accent-teal); }
+
+[data-testid="stAppViewContainer"],
+[data-testid="stApp"],
+.stApp {
+    background-color: #0B0F14 !important;
+}
+
+[data-testid="stWidgetLabel"] p,
+[data-testid="stMarkdownContainer"] p {
+    color: #E5E7EB !important;
+}
+
+.stRadio label, .stSelectbox label, .stSlider label {
+    color: #9CA3AF !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -192,34 +220,36 @@ if 'env' not in st.session_state:
     st.session_state.prev_state = None
 
 def render_navbar():
+    pages = ["Scenario", "Simulation", "Compare", "Analytics"]
+
     active = st.session_state.get("active_page", "Scenario")
-    status_color = "#00E5FF" if st.session_state.get("running") else "rgba(156,163,175,0.6)"
-    status_text = "ACTIVE" if st.session_state.get("running") else "READY"
 
-    def link_style(page):
-        if active == page:
-            return "font-family:'Orbitron',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#00E5FF;text-decoration:none;padding:7px 16px;border-radius:30px;background:rgba(0,229,255,0.12);border:1px solid rgba(0,229,255,0.35);white-space:nowrap;"
-        return "font-family:'Orbitron',sans-serif;font-size:11px;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;color:rgba(229,231,235,0.55);text-decoration:none;padding:7px 16px;border-radius:30px;white-space:nowrap;"
+    # Layout: logo + buttons
+    col1, col2 = st.columns([1, 5])
 
-    st.markdown(f"""
-    <div style="display:flex;justify-content:space-between;align-items:center;background:rgba(11,15,20,0.85);backdrop-filter:blur(20px);padding:6px 12px;border-radius:50px;border:1px solid rgba(255,255,255,0.08);margin:0 auto 16px auto;width:fit-content;gap:20px;box-shadow:0 12px 30px rgba(0,0,0,0.4);">
-        <div style="font-family:'Orbitron',sans-serif;font-weight:800;font-size:14px;color:#00E5FF;letter-spacing:1px;padding-left:10px;">
-            ⚡ CRISISFLOW
-        </div>
-        <div style="display:flex;gap:5px;background:rgba(0,0,0,0.2);padding:4px;border-radius:40px;border:1px solid rgba(255,255,255,0.03);">
-            <a href="?page=Scenario" style="{link_style('Scenario')}">Scenario</a>
-            <a href="?page=Simulation" style="{link_style('Simulation')}">Simulation</a>
-            <a href="?page=Compare" style="{link_style('Compare')}">Compare</a>
-            <a href="?page=Analytics" style="{link_style('Analytics')}">Analytics</a>
-        </div>
-        <div style="display:flex;align-items:center;gap:12px;padding-right:15px;border-left:1px solid rgba(255,255,255,0.08);padding-left:20px;">
-            <div style="width:8px;height:8px;border-radius:50%;background:{status_color};box-shadow:0 0 10px {status_color};"></div>
-            <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:rgba(156,163,175,0.8);letter-spacing:1px;">
-                ● STATUS: {status_text}
-            </div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+    with col1:
+        st.markdown("### ⚡ CRISISFLOW")
+
+    with col2:
+        nav_cols = st.columns(len(pages))
+
+        for i, page in enumerate(pages):
+            with nav_cols[i]:
+                if st.button(page, key=f"nav_{page}", use_container_width=True):
+                    st.session_state.active_page = page
+                    st.rerun()
+
+                # Active highlight
+                if active == page:
+                    st.markdown(f"""
+                    <style>
+                    button[data-testid="baseButton-nav_{page}"] {{
+                        background: linear-gradient(135deg, #00E5FF, #00FFD1) !important;
+                        color: black !important;
+                        font-weight: 700 !important;
+                    }}
+                    </style>
+                    """, unsafe_allow_html=True)
 
 
 
@@ -253,8 +283,6 @@ def render_scenario():
             
             st.session_state.env_initialized = True
             st.session_state.active_page = "Simulation"
-            st.session_state.rewards = []
-            st.session_state.log_history = []
             st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
         
@@ -276,7 +304,7 @@ def render_simulation():
         return
 
     # ── CONTROLS ──
-    st.markdown('<div class="glass-card" style="padding:10px 40px; margin-bottom:10px;">', unsafe_allow_html=True)
+    st.markdown('<div class="glass-card" style="padding:8px 40px; margin-bottom:8px;">', unsafe_allow_html=True)
     ctrl = st.columns([1,1,1,1,8])
     with ctrl[0]:
         start_label = "▶ Resume" if st.session_state.paused else "▶ Start"
@@ -339,35 +367,41 @@ def render_simulation():
 
             # ── RENDER UPDATES (PLACEHOLDERS) ──
             sd = s2.model_dump() if hasattr(s2, "model_dump") else s2
-            map_p.plotly_chart(draw_pydeck_map(sd, prev_state=st.session_state.prev_state, alpha=0.3), width="stretch", key="map_live")
+            map_p.plotly_chart(draw_pydeck_map(sd, prev_state=st.session_state.prev_state, alpha=0.3), width="stretch")
             eff_p.markdown(render_glass_card("Mission Efficiency", f"{inf['score']*100:.1f}%", f"Step {len(st.session_state.rewards)}/{MAX_STEPS}", accent=True), unsafe_allow_html=True)
             log_p.markdown(f'<div class="dispatch-log">{"".join(st.session_state.log_history)}</div>', unsafe_allow_html=True)
             
             if st.session_state.rewards:
                 fig = go.Figure(data=[go.Scatter(y=st.session_state.rewards, line=dict(color="#00E5FF", width=3), fill='tozeroy', fillcolor='rgba(0, 229, 255, 0.1)')])
                 fig.update_layout(height=160, margin=dict(l=0,r=0,t=0,b=0), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', xaxis_visible=False, yaxis_visible=False)
-                rew_p.plotly_chart(fig, width="stretch", config={'displayModeBar': False}, key="rew_live")
+                rew_p.plotly_chart(fig, width="stretch", config={'displayModeBar': False})
             
             if d or len(st.session_state.rewards) >= MAX_STEPS: 
                 st.session_state.running = False
                 st.rerun()
                 break
             
-            # Control speed: higher speed value = smaller sleep
-            time.sleep(1.0 / st.session_state.config["speed"])
+            # Control speed mapping: 1 -> ~0.95s, 10 -> 0.05s
+            delay = round(1.05 - (st.session_state.config["speed"] * 0.1), 2)
+            delay = max(0.05, min(1.0, delay))
+            time.sleep(delay)
 
     # Post-Simulation / Paused View (Static)
     inf = st.session_state.env._build_info()
     eff_p.markdown(render_glass_card("Mission Efficiency", f"{inf['score']*100:.1f}%", "Mission Grade", accent=True), unsafe_allow_html=True)
     log_p.markdown(f'<div class="dispatch-log">{"".join(st.session_state.log_history)}</div>', unsafe_allow_html=True)
     sd = st.session_state.state.model_dump() if hasattr(st.session_state.state, "model_dump") else st.session_state.state
-    map_p.plotly_chart(draw_pydeck_map(sd, alpha=1.0), width="stretch", key="map_static")
+    map_p.plotly_chart(draw_pydeck_map(sd, alpha=1.0), width="stretch")
     if st.session_state.rewards:
         fig = go.Figure(data=[go.Scatter(y=st.session_state.rewards, line=dict(color="#00E5FF", width=3))])
         fig.update_layout(height=160, margin=dict(l=0,r=0,t=0,b=0), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
-        rew_p.plotly_chart(fig, width="stretch", key="rew_static")
+        rew_p.plotly_chart(fig, width="stretch")
 
 def render_comparison():
+    if not st.session_state.env_initialized:
+        st.markdown('<div class="glass-card" style="text-align:center;"><div class="card-title">No Mission Data</div><div class="card-desc">Please go to Scenario and initialize the environment first.</div></div>', unsafe_allow_html=True)
+        return
+
     st.markdown("<h1>Strategic Agent Comparison</h1>", unsafe_allow_html=True)
     if not st.session_state.compare_results:
         st.markdown(f"""<div class="glass-card" style="text-align:center;"><div class="card-title">Battle Benchmark</div><div class="card-desc">Execute simultaneous simulations to identify optimal response logic.</div></div>""", unsafe_allow_html=True)
@@ -395,6 +429,10 @@ def render_comparison():
             st.markdown('</div>', unsafe_allow_html=True)
 
 def render_analytics():
+    if not st.session_state.env_initialized:
+        st.markdown('<div class="glass-card" style="text-align:center;"><div class="card-title">No Mission Data</div><div class="card-desc">Please go to Scenario and initialize the environment first.</div></div>', unsafe_allow_html=True)
+        return
+
     st.markdown("<h1>📊 Tactical Performance Analytics</h1>", unsafe_allow_html=True)
     if st.session_state.rewards:
         st.markdown('<div class="glass-card"><div class="card-title">Historical Reward Quality</div>', unsafe_allow_html=True)
@@ -407,11 +445,10 @@ def render_analytics():
         st.markdown('<div class="glass-card"><div class="card-title">Intelligence Gap</div><div class="card-desc">No mission data detected. Run a simulation to generate tactical analytics.</div></div>', unsafe_allow_html=True)
 
 
-# ── MAIN ──
-url_page = st.query_params.get("page", None)
-if url_page in ["Scenario", "Simulation", "Compare", "Analytics"]:
-    st.session_state.active_page = url_page
-page = st.session_state.get("active_page", "Scenario")
+# Read page from session state
+if 'active_page' not in st.session_state:
+    st.session_state.active_page = "Scenario"
+page = st.session_state.active_page
 
 render_navbar()
 
