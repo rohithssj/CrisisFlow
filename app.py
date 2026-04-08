@@ -48,8 +48,23 @@ header { display: none !important; }
 #MainMenu { visibility: hidden !important; }
 footer { visibility: hidden !important; }
 .main .block-container {
-    padding-top: 80px !important;
-    max-width: 95% !important;
+    padding-top: 70px !important;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+}
+
+[data-testid="stAppViewContainer"] > section:first-child {
+    padding-top: 0 !important;
+}
+
+[data-testid="stAppViewBlockContainer"] {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+}
+
+div[data-testid="stVerticalBlock"]:first-child {
+    gap: 0 !important;
+    padding-top: 0 !important;
 }
 
 /* CARDS & GRID */
@@ -187,15 +202,15 @@ def render_navbar():
         return "font-family:'Orbitron',sans-serif;font-size:11px;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;color:rgba(229,231,235,0.55);text-decoration:none;padding:7px 16px;border-radius:30px;white-space:nowrap;"
 
     st.markdown(f"""
-    <div style="display:flex;justify-content:space-between;align-items:center;background:rgba(11,15,20,0.85);backdrop-filter:blur(20px);padding:6px 12px;border-radius:50px;border:1px solid rgba(255,255,255,0.08);margin:0 auto 30px auto;width:fit-content;gap:20px;box-shadow:0 12px 30px rgba(0,0,0,0.4);">
+    <div style="display:flex;justify-content:space-between;align-items:center;background:rgba(11,15,20,0.85);backdrop-filter:blur(20px);padding:6px 12px;border-radius:50px;border:1px solid rgba(255,255,255,0.08);margin:0 auto 16px auto;width:fit-content;gap:20px;box-shadow:0 12px 30px rgba(0,0,0,0.4);">
         <div style="font-family:'Orbitron',sans-serif;font-weight:800;font-size:14px;color:#00E5FF;letter-spacing:1px;padding-left:10px;">
             ⚡ CRISISFLOW
         </div>
         <div style="display:flex;gap:5px;background:rgba(0,0,0,0.2);padding:4px;border-radius:40px;border:1px solid rgba(255,255,255,0.03);">
-            <a href="/?page=Scenario" style="{link_style('Scenario')}">Scenario</a>
-            <a href="/?page=Simulation" style="{link_style('Simulation')}">Simulation</a>
-            <a href="/?page=Compare" style="{link_style('Compare')}">Compare</a>
-            <a href="/?page=Analytics" style="{link_style('Analytics')}">Analytics</a>
+            <a href="?page=Scenario" style="{link_style('Scenario')}">Scenario</a>
+            <a href="?page=Simulation" style="{link_style('Simulation')}">Simulation</a>
+            <a href="?page=Compare" style="{link_style('Compare')}">Compare</a>
+            <a href="?page=Analytics" style="{link_style('Analytics')}">Analytics</a>
         </div>
         <div style="display:flex;align-items:center;gap:12px;padding-right:15px;border-left:1px solid rgba(255,255,255,0.08);padding-left:20px;">
             <div style="width:8px;height:8px;border-radius:50%;background:{status_color};box-shadow:0 0 10px {status_color};"></div>
