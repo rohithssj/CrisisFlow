@@ -1,256 +1,86 @@
-# 🚑 CrisisFlow — AI-Powered Disaster Response Simulation
+# ⚡ CrisisFlow | Emergency Response Command Center
 
-CrisisFlow is a **real-time crisis response simulation system** that models how emergency resources (ambulances, hospitals) are allocated under high-pressure scenarios using intelligent decision-making.
-
-It is designed to demonstrate how **AI-driven coordination systems** can significantly improve survival outcomes during disasters.
+CrisisFlow is a high-performance emergency response simulator designed for real-time tactical decision-making and agent benchmarking.
 
 ---
 
-# 🌍 Problem Statement
+## 🛠️ Requirements
 
-In real-world disasters (earthquakes, floods, urban accidents):
-
-* Emergency resources are **limited**
-* Decisions must be made **in seconds**
-* Poor coordination leads to:
-
-  * Increased fatalities
-  * Delayed response times
-  * Underutilized hospitals
-
-👉 The challenge is:
-
-> How can we intelligently allocate emergency resources in real-time to maximize survival?
+- **Python Version:** Python **3.11** only (required for stability and DLL compatibility on Windows)
+- **OS:** Windows / Linux / macOS
+- **Containerization:** Docker (optional)
 
 ---
 
-# 💡 Our Approach
+## 🚀 Local Setup
 
-CrisisFlow simulates a **dynamic disaster environment** and uses an intelligent agent to:
+Follow these steps to get CrisisFlow running on your local machine:
 
-* Evaluate multiple patients simultaneously
-* Prioritize based on:
+### 1. Install Python 3.11
+Ensure you have Python 3.11 installed. You can download it from [python.org](https://www.python.org/downloads/windows/).
 
-  * Severity
-  * Distance
-  * Waiting time
-* Assign ambulances efficiently
-* Route patients to optimal hospitals
-
----
-
-# 🧠 System Architecture
-
+### 2. Create Virtual Environment
+Open your terminal and run:
+```bash
+# Using the Python Launcher
+py -3.11 -m venv venv
 ```
-Environment (Gym-style)
-        ↓
-State Representation
-        ↓
-Decision Agent (Rule-based → RL-ready)
-        ↓
-Multi-Dispatch System
-        ↓
-Simulation Loop
-        ↓
-Metrics + Visualization
+
+### 3. Activate & Install Requirements
+```bash
+# Windows
+.\venv\Scripts\activate
+
+# Upgrade pip and install dependencies
+pip install --upgrade pip
+pip install -r requirements.txt --no-cache-dir
+```
+
+### 4. Run the Dashboard
+```bash
+streamlit run app.py
 ```
 
 ---
 
-# ⚙️ Core Features
+## 🐳 Docker Usage
 
-## 🚨 1. Multi-Dispatch Decision System
+CrisisFlow is fully containerized and production-ready.
 
-* Assigns multiple ambulances per timestep
-* Optimizes resource usage across the system
-
----
-
-## 🎯 2. Intelligent Priority Scoring
-
-Each patient is ranked using:
-
-* Severity (critical > medium > stable)
-* Distance from ambulance
-* Waiting time
-
-👉 Ensures **high-risk patients are prioritized first**
-
----
-
-## 🌐 3. Dynamic Simulation Environment
-
-* Randomized scenarios every run
-* Traffic-like complexity
-* Real-time state updates
-
----
-
-## 🗺️ 4. Tactical Map Visualization (Advanced UI)
-
-A **live command center dashboard** built with PyDeck:
-
-* 🚑 Ambulances (icon-based, animated)
-* 🏥 Hospitals (capacity-aware visualization)
-* 🧑 Patients (color-coded by severity)
-* ❌ Fatalities tracking
-* 🔗 Route visualization (ambulance → patient → hospital)
-
----
-
-## 🎬 5. Real-Time Animation Engine
-
-* Smooth movement (no teleportation)
-* Continuous updates without full page refresh
-* Live system behavior visualization
-
----
-
-## 🧠 6. Operational Intelligence Feed
-
-A live decision log showing:
-
-* Ambulance assignments
-* Patient prioritization
-* Real-time actions taken by the agent
-
-👉 Makes AI decisions **transparent and interpretable**
-
----
-
-## 📊 7. Performance Metrics Dashboard
-
-### 🔥 Mission Efficiency Score
-
-Overall system performance (0 → 1)
-
-### 📦 Key Metrics
-
-* Survival Rate
-* Fatalities
-* Critical Patients Saved
-* Average Response Time
-
-All metrics are displayed in **premium card-based UI**
-
----
-
-## 📈 8. Reward Performance Tracking
-
-* Tracks reward progression over time
-* Helps evaluate agent performance
-
----
-
-## ⚡ 9. High-Performance UI Architecture
-
-* No full-page refreshes
-* Component-level updates using placeholders
-* Smooth real-time experience
-
----
-
-# 🧪 Simulation Workflow
-
-1. Initialize environment
-2. Generate random crisis scenario
-3. Agent observes system state
-4. Assigns ambulances
-5. Simulation updates:
-
-   * Movement
-   * Pickups
-   * Deliveries
-6. Metrics updated
-7. Repeat until completion
-
----
-
-# 🏗️ Tech Stack
-
-* **Python**
-* **Streamlit** (UI Dashboard)
-* **PyDeck (Deck.gl)** — Map visualization
-* **NumPy / Pandas** — Data handling
-
----
-
-# 🔄 OpenEnv Compliance
-
-CrisisFlow follows a structured environment design:
-
-* `reset()` → Initialize scenario
-* `step(action)` → Execute decisions
-* `state` → Current system snapshot
-
----
-
-# 📁 Project Structure
-
+### Build Image
+```bash
+docker build -t crisisflow .
 ```
-crisisflow/
-│
-├── agents/
-│   └── baseline_agent.py
-│
-├── environment/
-│   └── crisis_env.py
-│
-├── ui/
-│   └── map.py
-│
-├── app.py
-├── inference.py
-├── Dockerfile
-└── requirements.txt
+
+### Run Container
+```bash
+docker run -p 8501:8501 crisisflow
 ```
 
 ---
 
-# 🚀 Key Innovations
+## 🔒 Troubleshooting (Windows DLL Errors)
 
-✅ Multi-dispatch coordination system
-✅ Real-time tactical visualization
-✅ Smooth animation engine (no refresh UX)
-✅ Explainable AI decisions
-✅ Production-grade dashboard UI
+If you encounter an `ImportError: DLL load failed` when importing `pandas`:
 
----
-
-# 📦 Deployment Ready
-
-* Docker-compatible
-* Hugging Face Spaces ready
-* Lightweight and efficient
+1. **Verify Python Version:** Ensure you are NOT using Python 3.13. Switch to **Python 3.11**.
+2. **Clean Reinstall:**
+   ```bash
+   pip uninstall pandas -y
+   pip install pandas --no-cache-dir
+   ```
+3. **Environment Isolation:** Ensure you are using a virtual environment (`venv`) to avoid conflicts with global packages.
 
 ---
 
-# 🔮 Future Scope
+## 🌍 Compatibility
 
-* Reinforcement Learning-based agent
-* Traffic-aware routing
-* Real-world map integration
-* Multi-city disaster scaling
-* Predictive demand modeling
-
----
-
-# 🏁 Conclusion
-
-CrisisFlow demonstrates how **AI + simulation + real-time visualization** can transform disaster response systems.
-
-> From reactive decision-making → to intelligent, coordinated action.
+CrisisFlow is designed to be highly portable and is guaranteed compatible with:
+- ✅ **Docker**
+- ✅ **Hugging Face Spaces**
+- ✅ **Streamlit Cloud**
 
 ---
 
-# 👨‍💻 Built For
-
-* Meta / PyTorch Hackathon
-* OpenEnv-style AI simulation challenges
-
----
-
-# ⭐ Final Note
-
-CrisisFlow is not just a simulation —
-it is a **vision of how intelligent systems can save lives at scale**.
+## 📄 License
+This project is part of the Meta-Hackathon series. 🚀
