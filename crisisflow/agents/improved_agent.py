@@ -38,15 +38,14 @@ class ImprovedAgent(BaseAgent):
         if not active_pats or not available_ambs:
             return []
 
-        # Weights for the priority score
-        severity_weight = 3.0
-        waiting_weight = 1.5
+        # Weights for the priority score (Optimized for HARD mode)
+        severity_weight = 4.0
+        waiting_weight = 2.0
         distance_weight = 1.0
+        urgency_threshold = 3
+        urgency_bonus_val = 6.0
         
-        # Survival thresholds from environment logic
-        death_thresholds = {1: 30, 2: 15, 3: 7}
-        # Approximate speed/traffic to estimate travel time (used for survival check only)
-        # Using a conservative estimate (lower speed/higher traffic)
+        # Approximate speed/traffic to estimate travel time
         avg_speed = 0.04
         avg_traffic = 1.4
 
@@ -57,15 +56,21 @@ class ImprovedAgent(BaseAgent):
                 dist = math.sqrt((amb['x'] - pat['x'])**2 + (amb['y'] - pat['y'])**2)
                 
                 # Check for survival feasibility (Survival Check)
-                # If patient is doomed even if we send an ambulance, skip this pair
                 est_travel_steps = max(1, int((dist / avg_speed) * avg_traffic))
-                if pat.get("time_waiting", 0) + est_travel_steps >= death_thresholds.get(pat.get("severity", 1), 30):
+                ttl = pat.get("ttl", 30)
+                wait_time = pat.get("time_waiting", 0)
+                
+                if wait_time + est_travel_steps >= ttl:
                     continue
 
-                # Priority Score calculation: priority = (3.0 * severity) + (1.5 * waiting_time) - (1.0 * distance)
+                # Priority Score calculation: score = severity_weight * severity + waiting_weight * wait_time - distance_weight * distance + urgency_bonus
                 priority = (severity_weight * pat.get("severity", 1)) + \
-                           (waiting_weight * pat.get("time_waiting", 0)) - \
+                           (waiting_weight * wait_time) - \
                            (distance_weight * dist)
+                
+                # Urgency Bonus: if near death
+                if ttl - wait_time <= urgency_threshold:
+                    priority += urgency_bonus_val
                 
                 scored_pairs.append({
                     "priority": priority,

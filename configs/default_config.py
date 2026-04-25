@@ -26,12 +26,12 @@ DIFFICULTY_CONFIGS = {
     },
     # Hard: Limited resources, high frequency critical crises
     "hard": {
-        "num_ambulances": 5,
+        "num_ambulances": 3,
         "num_hospitals": 2,
-        "hospital_capacity": 8,
-        "num_crises": 60,
+        "hospital_capacity": 6,
+        "num_crises": 72,
         "max_steps": 1000,
         "ambulance_speed": 0.03,
-        "severity_weights": [0.2, 0.3, 0.5],  # Mostly critical
+        "severity_weights": [0.1, 0.3, 0.6],  # 60% critical
     },
 }

@@ -26,17 +26,18 @@ class Patient:
     y: float
     severity: int          # 1 (minor) → 3 (critical)
     time_waiting: int = 0  # steps waited without help
+    ttl: int = 50          # default ttl
     rescued: bool = False
     dead: bool = False
     # Track if patient was rescued without an available hospital bed
     rescued_without_hospital: bool = False
 
-    def tick(self):
+    def tick(self, difficulty: str = "medium"):
         """Advance one time step. Critical patients degrade faster."""
         if not self.rescued and not self.dead:
             self.time_waiting += 1
-            death_threshold = {1: 30, 2: 15, 3: 7}[self.severity]
-            if self.time_waiting >= death_threshold:
+            # Death logic: only if wait_time > ttl AND not yet rescued
+            if self.time_waiting >= self.ttl:
                 self.dead = True
 
 
@@ -290,7 +291,7 @@ class CrisisEnv:
         # 3. Tick patients (ageing, potential death)
         before_dead = self._dead_count
         for pat in self.patients:
-            pat.tick()
+            pat.tick(difficulty=self.difficulty)
             if pat.dead and not pat.rescued:
                 if pat.id not in self._counted_dead:
                     self._counted_dead.add(pat.id)
@@ -298,7 +299,8 @@ class CrisisEnv:
 
         new_deaths = self._dead_count - before_dead
         if new_deaths > 0:
-            reward_parts["death_penalty"] = -0.3 * new_deaths
+            penalty_per_death = -0.5 if self.difficulty == "hard" else -0.3
+            reward_parts["death_penalty"] = penalty_per_death * new_deaths
 
         # 4. Tick hospitals
         for hosp in self.hospitals:
@@ -330,6 +332,7 @@ class CrisisEnv:
                     "y": round(p.y, 3),
                     "severity": p.severity,
                     "time_waiting": p.time_waiting,
+                    "ttl": p.ttl,
                     "rescued": p.rescued,
                     "dead": p.dead,
                 }
@@ -416,6 +419,7 @@ class CrisisEnv:
             x=x,
             y=y,
             severity=severity,
+            ttl={1: 25, 2: 12, 3: 5} if self.difficulty == "hard" else {1: 30, 2: 15, 3: 7}[severity]
         )
         self.patients.append(pat)
         self._next_patient_id += 1
@@ -462,9 +466,10 @@ class CrisisEnv:
         speed_factor = max(0.0, 1.0 - patient.time_waiting / max_wait)
         reward = severity_bonus * (0.5 + 0.5 * speed_factor)
         
-        # 3. HOSPITAL CAPACITY OVERFLOW: 50% penalty if rescued without hospital bed
+        # 3. HOSPITAL CAPACITY OVERFLOW: Penalty if rescued without hospital bed
         if patient.rescued_without_hospital:
-            reward *= 0.5
+            multiplier = 0.5 if self.difficulty != "hard" else 0.4 # Higher penalty for hard
+            reward *= multiplier
             
         return reward
 
@@ -478,6 +483,11 @@ class CrisisEnv:
           - idle penalty (all ambulances free but active patients exist)
         """
         reward = sum(parts.values())
+        
+        # New: Waiting penalty for HARD mode to encourage rapid response
+        if self.difficulty == "hard":
+            total_wait = sum(p.time_waiting for p in self.patients if not p.rescued and not p.dead)
+            reward -= 0.001 * total_wait
 
         # Small penalty for idle ambulances when patients need help
         active = [p for p in self.patients if not p.rescued and not p.dead]

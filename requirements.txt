@@ -3,4 +3,6 @@ pandas==2.2.2
 numpy==1.26.4
 plotly==5.22.0
 pydeck==0.9.1
-pydantic==2.7.1
+fastapi
+uvicorn
+pydantic
