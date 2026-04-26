@@ -32,17 +32,20 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 # 3. Define Input Schema with Validation
 class IncidentRequest(BaseModel):
-    type: str = Field("medical", description="Type of incident (medical, cyber, fire, flood)")
-    severity: int = Field(..., gt=0, description="Severity of the incident (1-10)")
-    wait_time: float = Field(..., ge=0, description="Time patient has been waiting in minutes")
-    distance: float = Field(..., ge=0, description="Distance to the incident site")
+    type: str = "medical"
+    severity: int
+    wait_time: float
+    distance: float
+    location: str = "Unknown"
 
 # 4. Define Response Schema
 class DecisionResponse(BaseModel):
     unit: str
     risk: str
-    score: int
+    score: float
     reason: str
+    confidence: int
+    priority: str
 
 # 5. Core Decision Endpoint
 @app.post("/decision", response_model=DecisionResponse)
@@ -59,7 +62,7 @@ async def get_decision(request: IncidentRequest):
         result = run_simulation(data)
         
         # 3. Validate Engine Output Structure
-        required_keys = ["unit", "risk", "score", "reason"]
+        required_keys = ["unit", "risk", "score", "reason", "confidence", "priority"]
         if not result or not all(key in result for key in required_keys):
             raise ValueError("Incomplete engine output")
             

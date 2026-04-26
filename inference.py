@@ -1,3 +1,4 @@
+import random
 import os
 import yaml
 import math
@@ -10,82 +11,88 @@ from grader import grade
 def run_simulation(data: dict):
     """
     Runs a single decision inference based on input incident data.
-    Input format: {"type": str, "severity": int, "wait_time": float, "distance": float}
+    Input format: {"type": str, "severity": int, "wait_time": float, "distance": float, "location": str, "config": dict}
     """
     incident_type = data.get("type", "medical").lower()
     severity = data.get("severity", 5)
+    wait_time = data.get("wait_time", 0.0)
+    distance = data.get("distance", 0.0)
+    location = data.get("location", "Unknown")
+    config = data.get("config", {})
 
+    # 1. Score formula
+    score = severity * 2 + wait_time * 1.5 - distance * 1.2
+
+    # 2. Sensitivity & Horizon Adjustments
+    sensitivity = config.get("inferenceSensitivity", "normal")
+    horizon = config.get("predictiveHorizon", 6)
+
+    # 3. Determine unit
     if "cyber" in incident_type:
-        return {
-            "unit": "Cyber Response Unit",
-            "risk": "High" if severity > 7 else "Medium",
-            "score": severity * 10,
-            "reason": "Network breach detected. Initiating firewall isolation and system lockdown."
-        }
-
+        unit = "Cyber Response Unit"
     elif "fire" in incident_type:
-        return {
-            "unit": "Fire Brigade",
-            "risk": "Critical" if severity > 8 else "High",
-            "score": severity * 12,
-            "reason": "Fire outbreak detected. Dispatching nearest fire containment units."
-        }
-
+        unit = "Fire Brigade"
     elif "flood" in incident_type:
-        return {
-            "unit": "Rescue Team",
-            "risk": "High",
-            "score": severity * 11,
-            "reason": "Flood alert. Deploying evacuation and rescue teams."
-        }
+        unit = "Rescue Team"
+    elif "medical" in incident_type:
+        unit = "Emergency Medical Services"
+    else:
+        unit = "General Response Unit"
 
-    else:  # medical (default)
-        # Weights from ImprovedAgent logic
-        severity_weight = 4.0
-        waiting_weight = 2.0
-        distance_weight = 1.0
-        urgency_threshold = 3
-        urgency_bonus_val = 6.0
-        
-        wait_time = data.get("wait_time", 0.0)
-        distance = data.get("distance", 0.0)
+    # 4. Determine risk
+    if severity >= 8:
+        risk = "Critical"
+    elif severity >= 5:
+        risk = "High"
+    else:
+        risk = "Moderate"
 
-        # Priority Score calculation
-        score = (severity_weight * severity) + (waiting_weight * wait_time) - (distance_weight * distance)
-        
-        # Approximate TTL logic
-        ttl_map = {1: 30, 2: 15, 3: 7}
-        ttl = ttl_map.get(severity, 10)
-        
-        if ttl - wait_time <= urgency_threshold:
-            score += urgency_bonus_val
+    # 5. Determine priority
+    if score >= 15:
+        priority = "P1"
+    elif score >= 8:
+        priority = "P2"
+    else:
+        priority = "P3"
 
-        normalized_score = min(100, max(0, int(score * 2.5)))
+    # 6. Confidence (Influenced by sensitivity)
+    confidence = random.randint(70, 95)
+    if sensitivity == "low":
+        confidence -= 10
+    elif sensitivity == "enhanced":
+        confidence += 10
+    
+    confidence = max(0, min(100, confidence))
 
-        if severity >= 3 or (ttl - wait_time) <= 2:
-            risk = "Critical"
-        elif severity >= 2 or (ttl - wait_time) <= 5:
-            risk = "High"
-        else:
-            risk = "Medium"
+    # 7. Dynamic AI responses
+    if "fire" in incident_type:
+        reason = f"High-intensity fire detected in {location}. Nearest fire units mobilized. Containment priority elevated."
+    elif "cyber" in incident_type:
+        reason = f"Cyber intrusion detected targeting critical infrastructure in {location}. Isolation protocols initiated. Security units dispatched."
+    elif "flood" in incident_type:
+        reason = f"Flood risk escalating in {location}. Deploying rescue and evacuation teams to primary vectors."
+    elif "medical" in incident_type:
+        reason = f"Medical emergency reported in {location}. Dispatching nearest emergency medical services for immediate triage."
+    else:
+        reason = f"Incident detected in {location}. Assigning appropriate response team and monitoring telemetry."
 
-        hospitals = ["City Hospital", "Metro Medical Center", "Northside Clinic", "Downtown General"]
-        h_idx = int(distance * 13) % len(hospitals)
-        unit = hospitals[h_idx]
+    # Adjust explanation based on horizon
+    if horizon >= 6:
+        reason += f" Proactive mitigation enabled based on extended {horizon}h predictive horizon."
 
-        if risk == "Critical":
-            reason = f"Immediate life-threat detected. Bypassing capacity constraints for {unit}."
-        elif distance > 15:
-            reason = f"Extended transit time predicted. {unit} selected as optimal survival-feasible hub."
-        else:
-            reason = f"Standard load-balanced assignment to {unit} based on neural priority score."
+    # Neural Impact = severity * 10
+    neural_impact = severity * 10
 
-        return {
-            "unit": unit,
-            "risk": risk,
-            "score": normalized_score,
-            "reason": reason
-        }
+    return {
+        "unit": unit,
+        "risk": risk,
+        "score": round(score, 2),
+        "reason": reason,
+        "confidence": confidence,
+        "priority": priority,
+        "neuralImpact": neural_impact,
+        "threatScore": round(score, 2)
+    }
 
 if __name__ == "__main__":
     # Load environment variables (MANDATORY)
